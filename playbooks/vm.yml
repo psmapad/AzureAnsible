@@ -1,0 +1,72 @@
+---
+- hosts: localhost
+  connection: local
+  tasks:
+    - name: Create resource group
+      azure_rm_resourcegroup:
+        name: AZCSUFFRGANSI-TEST
+        location: PROCLOC
+      register: rg
+    - debug:
+        var: rg
+
+    - name: Create storage account
+      azure_rm_storageaccount:
+        resource_group: AZCSUFFRGANSI-TEST
+        name: azcsuffsaansi
+        account_type: Standard_LRS
+
+    - name: Create virtual network
+      azure_rm_virtualnetwork:
+        resource_group: AZCSUFFRGVNET
+        name: AZCSUFFVNET
+        address_prefixes: "AZVNET"
+
+    - name: Add subnet
+      azure_rm_subnet:
+        resource_group: AZCSUFFRGVNET
+        name: AZCSUFFVSNETANSI
+        address_prefix: "AZVSNET"
+        virtual_network: AZCSUFFVNET
+
+    - name: Create public ip
+      azure_rm_publicipaddress:
+        resource_group: AZCSUFFRGANSI-TEST
+        allocation_method: Dynamic
+        name: azcsuffpipansitest
+
+    - name: Create security group that allows SSH
+      azure_rm_securitygroup:
+        resource_group: AZCSUFFRGANSI-TEST
+        name: AZCSUFFNSGANSI-TEST
+        rules:
+        - name: AZCSUFFNSGANSI-TEST-SSH
+          protocol: Tcp
+          destination_port_range: 22
+          access: Allow
+          priority: 1000
+          direction: Inbound
+
+    - name: Create NIC
+      azure_rm_networkinterface:
+        resource_group: AZCSUFFRGANSI-TEST
+        name: AZCSUFFRGANSI-TEST-NIC
+        virtual_network: /subscriptions/AZSUBSCRIPTION/resourceGroups/AZCSUFFRGVNET/providers/Microsoft.Network/virtualNetworks/AZCSUFFVNET
+        subnet: AZCSUFFVSNETANSI
+        public_ip_name: azcsuffpipansi-test
+        security_group: AZCSUFFNSGANSI-TEST
+
+    - name: Create virtual machine
+      azure_rm_virtualmachine:
+        resource_group: AZCSUFFRGANSI-TEST
+        name: AZCSUFFVMANSI-TEST
+        vm_size: VMPROCSIZE
+        admin_username: AZVMUser
+        admin_password: AZVMPass
+        network_interfaces: AZCSUFFRGANSI-TEST-NIC
+        managed_disk_type: Standard_LRS
+        image:
+          offer: CentOS
+          publisher: OpenLogic
+          sku: '7.5'
+          version: latest
