@@ -1,7 +1,7 @@
 #!/bin/bash
 ## Script to deploy Ansible on Azure
 ## Centos 7.5
-## Tested on Azure
+## Tested on Azure MSFT
 ## Developer: Manuel Alejandro Peña Sánchez
 ## Ansible on Azure
 
